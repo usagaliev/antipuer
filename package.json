@@ -1,9 +1,10 @@
 {
-  "name": "anti-puer-bot",
+  "name": "anti-puer-bot-suite",
   "private": true,
   "type": "module",
   "scripts": {
-    "send": "node send.js"
-  },
-  "dependencies": {}
+    "plan": "node send-plan.js",
+    "finance": "node send-finance.js",
+    "brain": "node send-brain.js"
+  }
 }
