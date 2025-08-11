@@ -1,0 +1,19 @@
+name: Weekly Summary
+on:
+  schedule:
+    - cron: '0 15 * * 0'  # Воскресенье 15:00 UTC = 21:00 Asia/Bishkek
+  workflow_dispatch: {}
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: node --version
+      - run: node send-weekly.js
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+          TIMEZONE: ${{ secrets.TIMEZONE }}
