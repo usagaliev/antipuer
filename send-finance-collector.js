@@ -1,6 +1,7 @@
 // Забирает новые апдейты Telegram и пишет траты в data/expenses-YYYY.csv
-// Хранит смещение (последний update_id) в data/finance-state.json
-// Формат парсинга: "СУММА КАТЕГОРИЯ [заметка]"
+// Поддержка:
+// 1) "1200 еда шаверма" (сумма, категория, опц. заметка)
+// 2) Многострочный: начинается со слова "расходы" и далее "Категория - сумма"
 
 import fs from 'fs';
 import path from 'path';
@@ -73,34 +74,58 @@ if (!data.ok) {
 let maxUpdateId = state.last_update_id || 0;
 let saved = 0;
 
-// Парсер суммы/категории/заметки
-const rx = /^\s*\+?(\d+(?:[.,]\d{1,2})?)\s+([^\s]+)(?:\s+(.+))?$/i;
+// Старый формат: "1200 еда шаверма"
+const rxSingle = /^\s*\+?(\d+(?:[.,]\d{1,2})?)\s+([^\s]+)(?:\s+(.+))?$/i;
 
 for (const upd of data.result) {
   if (upd.update_id > maxUpdateId) maxUpdateId = upd.update_id;
   const msg = upd.message || upd.edited_message;
   if (!msg) continue;
-  if (String(msg.chat?.id) !== String(CHAT_ID)) continue; // только личный чат/нужная группа
+  if (String(msg.chat?.id) !== String(CHAT_ID)) continue; // только нужный чат
 
-  const text = (msg.text || '').trim();
-  const m = rx.exec(text);
-  if (!m) continue;
-
-  const amount = m[1].replace(',', '.');
-  const category = m[2].toLowerCase();
-  const noteRaw = (m[3] || '').replaceAll(',', ' ').trim();
-  const note = `"${noteRaw.replaceAll('"','""')}"`; // безопасная CSV-ка
+  const textRaw = (msg.text || '').trim();
+  if (!textRaw) continue;
 
   const { isoDate, isoTime } = ymdInTZ(msg.date, TIMEZONE);
-  appendCSV({
-    date: isoDate,
-    time: isoTime,
-    amount,
-    category,
-    note,
-    message_id: msg.message_id
-  });
-  saved++;
+
+  // 1) Многострочный формат: начинается со слова "расходы"
+  if (/^расходы/i.test(textRaw)) {
+    const lines = textRaw.split('\n').slice(1); // убираем первую строку
+    for (const line of lines) {
+      const m = line.match(/^\s*([^-]+?)\s*-\s*(\d+(?:[.,]\d{1,2})?)\s*$/);
+      if (!m) continue;
+      const category = m[1].trim().toLowerCase();
+      const amount = m[2].replace(',', '.');
+      appendCSV({
+        date: isoDate,
+        time: isoTime,
+        amount,
+        category,
+        note: '""', // пустая заметка
+        message_id: msg.message_id
+      });
+      saved++;
+    }
+    continue;
+  }
+
+  // 2) Старый однострочный формат
+  const m = rxSingle.exec(textRaw);
+  if (m) {
+    const amount = m[1].replace(',', '.');
+    const category = m[2].toLowerCase();
+    const noteRaw = (m[3] || '').replaceAll(',', ' ').trim();
+    const note = `"${noteRaw.replaceAll('"','""')}"`;
+    appendCSV({
+      date: isoDate,
+      time: isoTime,
+      amount,
+      category,
+      note,
+      message_id: msg.message_id
+    });
+    saved++;
+  }
 }
 
 state.last_update_id = maxUpdateId;
