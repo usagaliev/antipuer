@@ -1,7 +1,7 @@
 name: Finance Reminder
 on:
   schedule:
-    - cron: '0 16 * * *' # 22:00 Бишкек
+    - cron: '0 16 * * *'  # 16:00 UTC = 22:00 Asia/Bishkek
   workflow_dispatch: {}
 jobs:
   send:
@@ -11,7 +11,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: npm ci || npm i
+      - run: node --version
       - run: node send-finance.js
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
