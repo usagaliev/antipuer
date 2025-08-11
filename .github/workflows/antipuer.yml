@@ -2,8 +2,8 @@ name: Anti-Puer Daily
 
 on:
   schedule:
-    # 03:00 UTC = 13:00 Asia/Bishkek (UTC+6)
-    - cron: '30 2 * * *'
+    # 07:00 UTC = 13:00 Asia/Bishkek (UTC+6)
+  - cron: '0 7 * * *'
   workflow_dispatch: {}
 
 jobs:
