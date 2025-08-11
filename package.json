@@ -1,0 +1,9 @@
+{
+  "name": "anti-puer-bot",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "send": "node send.js"
+  },
+  "dependencies": {}
+}
