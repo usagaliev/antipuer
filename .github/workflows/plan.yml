@@ -1,0 +1,20 @@
+name: Anti-Puer Daily
+on:
+  schedule:
+    - cron: '0 7 * * *' # 13:00 Бишкек
+  workflow_dispatch: {}
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci || npm i
+      - run: node send-plan.js
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+          START_DATE: ${{ secrets.START_DATE }}
+          TIMEZONE: ${{ secrets.TIMEZONE }}
