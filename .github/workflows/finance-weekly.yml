@@ -1,0 +1,21 @@
+name: Finance Weekly Summary
+on:
+  schedule:
+    - cron: '5 15 * * 0'   # Вск 15:05 UTC = 21:05 Asia/Bishkek
+  workflow_dispatch: {}
+jobs:
+  weekly:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: node --version
+      - run: node send-finance-weekly.js
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+          TIMEZONE: ${{ secrets.TIMEZONE }}
